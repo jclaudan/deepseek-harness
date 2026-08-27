@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-# Port app local
-APP_PORT=3080
+# Port app local (interne au conteneur, distinct du listen nginx 3080)
+APP_PORT=3081
 
 # Build argument list for dsh web
 DSH_CMD_ARGS="web --no-open --port ${APP_PORT}"

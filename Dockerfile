@@ -1,8 +1,8 @@
-FROM node:24-bullseye-slim
+FROM node:24-bookworm-slim
 
 # Installer utilitaires, pnpm, nginx et netcat
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates curl gnupg2 nginx netcat-openbsd \
+    ca-certificates curl gnupg2 nginx netcat-openbsd git \
   && rm -rf /var/lib/apt/lists/*
 
 # Activer corepack et préparer pnpm exact
@@ -10,19 +10,16 @@ RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
 
 WORKDIR /usr/src/app
 
-# Copier les fichiers de workspace nécessaires pour installer les dépendances en cacheable layers
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY . .
 
 # Installer les dépendances (workspace)
 RUN pnpm install --frozen-lockfile --prefer-offline
 
-# Copier le reste du repo et builder
-COPY . .
-
 # Build : prépare lib/dist utilisés par "dsh web"
 RUN pnpm run build
 
-# Config nginx : on remplace la conf par la nôtre
+# Config nginx : supprime la conf par défaut et installe la nôtre
+RUN rm -f /etc/nginx/conf.d/default.conf /etc/nginx/sites-enabled/default
 COPY docker/nginx/dsh.conf /etc/nginx/conf.d/dsh.conf
 
 # Script d'entrée pour lancer le serveur Node puis nginx

@@ -296,8 +296,15 @@ export abstract class AbstractApiClient implements IApiClient {
   }
 
   protected mintRpcId(): RpcId {
-    // crypto.randomUUID is a Web API (browser + Node ≥19): keeps this base platform-neutral.
-    return RpcId(crypto.randomUUID())
+    const c = globalThis.crypto as Crypto | undefined
+    if (c?.randomUUID !== undefined) return RpcId(c.randomUUID())
+    // Fallback for insecure http contexts (LAN) where randomUUID is unavailable but getRandomValues is.
+    const bytes = c!.getRandomValues(new Uint8Array(16))
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+    view.setUint8(6, (view.getUint8(6) & 0x0f) | 0x40)
+    view.setUint8(8, (view.getUint8(8) & 0x3f) | 0x80)
+    const hex = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('')
+    return RpcId(`${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`)
   }
 
   /**
