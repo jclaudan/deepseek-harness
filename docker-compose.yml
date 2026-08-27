@@ -4,6 +4,7 @@ services:
     container_name: deepseek-dsh
     ports:
       - "3080:3080"
+      - "3443:3443"
     environment:
       # Renseignez vos IPs LAN (ex: "192.168.1.10:3080 192.168.1.11:3080")
       # Vide = seul localhost accepté par dsh web (rejet Host header du LAN)
