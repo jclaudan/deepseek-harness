@@ -224,3 +224,61 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+@media (max-width: 680px) {
+  .panel {
+    flex-direction: column;
+    width: calc(100vw - 16px);
+    height: calc(100dvh - 16px);
+    height: calc(100vh - 16px);
+    max-width: none;
+    max-height: calc(100dvh - 16px);
+    max-height: calc(100vh - 16px);
+    border-radius: 16px;
+  }
+
+  .nav {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    width: auto;
+    padding: 12px 12px 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .navTitle {
+    display: none;
+  }
+
+  .navList {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .navList::-webkit-scrollbar {
+    display: none;
+  }
+
+  .navCell {
+    flex: none;
+    height: 36px;
+    padding: 0 12px;
+    white-space: nowrap;
+  }
+
+  .content {
+    min-height: 0;
+  }
+
+  .options {
+    padding: 0 16px 16px;
+  }
+}
