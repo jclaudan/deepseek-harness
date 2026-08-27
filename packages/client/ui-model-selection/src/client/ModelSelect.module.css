@@ -96,6 +96,13 @@
   --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
 }
 
+.menuPortal {
+  position: fixed;
+  right: auto;
+  bottom: auto;
+  z-index: 1000;
+}
+
 .status,
 .empty {
   padding: 10px;

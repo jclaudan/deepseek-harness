@@ -13,7 +13,7 @@ WORKDIR /usr/src/app
 COPY . .
 
 # Installer les dépendances (workspace)
-RUN pnpm install --frozen-lockfile --prefer-offline
+RUN pnpm install --prefer-offline
 
 # Build : prépare lib/dist utilisés par "dsh web"
 RUN pnpm run build

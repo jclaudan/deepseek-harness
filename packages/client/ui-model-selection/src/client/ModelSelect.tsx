@@ -12,9 +12,10 @@
  * card; the in-menu strip with Retry remains the catalog-load surface.
  */
 import {
-  useEffect, useId, useMemo, useRef, useState, useSyncExternalStore,
-  type KeyboardEvent, type FocusEvent,
+  useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore,
+  type CSSProperties, type KeyboardEvent, type FocusEvent,
 } from 'react'
+import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import type { ModelReasoningEffort, ModelSelection } from '@deepseek-ai/dsh-api-remotes/client'
 import {
@@ -61,7 +62,9 @@ export function ModelSelect(
   const toastSeq = useRef(0)
   const rootRef = useRef<HTMLDivElement | null>(null)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
+  const menuRef = useRef<HTMLDivElement | null>(null)
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const [menuPos, setMenuPos] = useState<CSSProperties | null>(null)
   const id = useId()
 
   const choices = useMemo(() => state.groups.flatMap(group =>
@@ -118,11 +121,39 @@ export function ModelSelect(
   useEffect(() => {
     if (!open) return
     const closeOutside = (event: MouseEvent): void => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+      if (!rootRef.current?.contains(event.target as Node) && !menuRef.current?.contains(event.target as Node)) setOpen(false)
     }
     document.addEventListener('mousedown', closeOutside)
     return () => { document.removeEventListener('mousedown', closeOutside) }
   }, [open])
+
+  useLayoutEffect(() => {
+    if (!open) { setMenuPos(null); return }
+    const place = () => {
+      const r = triggerRef.current?.getBoundingClientRect() ?? null
+      if (r === null) return
+      const el = menuRef.current
+      const w = el?.offsetWidth ?? 0
+      const h = el?.offsetHeight ?? 0
+      const MARGIN = 12
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      let x = r.right - w
+      let y = r.top - h - 8
+      if (w > 0) x = Math.min(Math.max(x, MARGIN), vw - w - MARGIN)
+      if (h > 0) y = Math.min(Math.max(y, MARGIN), vh - h - MARGIN)
+      // hidden pre-render: measure at 0,0 then place
+      if (w === 0 && h === 0) setMenuPos({ visibility: 'hidden', left: 0, top: 0 } as CSSProperties)
+      else setMenuPos({ left: x, top: y } as CSSProperties)
+    }
+    place()
+    window.addEventListener('scroll', place, true)
+    window.addEventListener('resize', place)
+    return () => {
+      window.removeEventListener('scroll', place, true)
+      window.removeEventListener('resize', place)
+    }
+  }, [open, pane, state.groups.length])
 
   if (!available) return null
 
@@ -241,13 +272,16 @@ export function ModelSelect(
         <IconChevronDownOutline14 className={clsx(css.chevron, open && css.chevronOpen)} />
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
+          ref={menuRef}
           id={`${id}-menu`}
-          className={css.menu}
+          className={clsx(css.menu, css.menuPortal)}
           role="menu"
           aria-label={t('menu.aria')}
           aria-busy={state.status === 'loading' || busy}
+          style={menuPos ?? { visibility: 'hidden', left: 0, top: 0 } as CSSProperties}
+          onClick={(e) => { e.stopPropagation() }}
         >
           {pane === 'root' && (
             <>
@@ -359,7 +393,7 @@ export function ModelSelect(
                 ))}
             </>
           )}
-        </div>
+        </div>, document.body
       )}
       {toast !== null && (
         <Toast
