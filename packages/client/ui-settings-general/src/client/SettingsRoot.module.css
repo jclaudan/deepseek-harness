@@ -226,15 +226,28 @@
 }
 
 @media (max-width: 680px) {
+  .overlay {
+    align-items: stretch;
+    padding: 8px;
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    padding-left: max(8px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
+    box-sizing: border-box;
+  }
+
   .panel {
     flex-direction: column;
-    width: calc(100vw - 16px);
-    height: calc(100dvh - 16px);
-    height: calc(100vh - 16px);
+    width: auto;
+    height: auto;
     max-width: none;
-    max-height: calc(100dvh - 16px);
-    max-height: calc(100vh - 16px);
+    max-height: none;
+    flex: 1;
+    min-height: 0;
     border-radius: 16px;
+    /* dvh second so it wins where supported; vh fallback */
+    max-height: calc(100vh - 16px);
+    max-height: calc(100dvh - 16px);
   }
 
   .nav {
