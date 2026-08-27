@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  dsh:
+    build: .
+    container_name: deepseek-dsh
+    ports:
+      - "3080:3080"
+    environment:
+      # TRUSTED_HOSTS: "192.168.1.10:3080"
+      TRUSTED_HOSTS: ""
+    restart: unless-stopped
+    shm_size: '512M'
+    # volumes:                                 # décommentez pour dev
+    #   - ./:/usr/src/app

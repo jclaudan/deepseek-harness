@@ -633,6 +633,48 @@ select.input {
   }
 }
 
+@media (max-width: 680px) {
+  .rowHead {
+    flex-wrap: wrap;
+  }
+
+  .editor {
+    padding: 12px;
+  }
+
+  .modelRow {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "id actions"
+      "name name";
+    row-gap: 8px;
+  }
+
+  .modelRow > :nth-child(1) {
+    grid-area: id;
+  }
+
+  .modelRow > :nth-child(2) {
+    grid-area: name;
+  }
+
+  .modelAdvanced {
+    grid-template-columns: 1fr;
+  }
+
+  select.input {
+    max-width: none;
+  }
+
+  .addActions {
+    flex-direction: column;
+  }
+
+  .addButton {
+    min-width: 0;
+  }
+}
+
 .fetchDialog {
   max-width: 520px;
 
