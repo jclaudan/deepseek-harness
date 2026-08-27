@@ -120,11 +120,15 @@ export function ModelSelect(
 
   useEffect(() => {
     if (!open) return
-    const closeOutside = (event: MouseEvent): void => {
+    const closeOutside = (event: MouseEvent | TouchEvent): void => {
       if (!rootRef.current?.contains(event.target as Node) && !menuRef.current?.contains(event.target as Node)) setOpen(false)
     }
-    document.addEventListener('mousedown', closeOutside)
-    return () => { document.removeEventListener('mousedown', closeOutside) }
+    document.addEventListener('mousedown', closeOutside as EventListener)
+    document.addEventListener('touchstart', closeOutside as EventListener, { passive: true })
+    return () => {
+      document.removeEventListener('mousedown', closeOutside as EventListener)
+      document.removeEventListener('touchstart', closeOutside as EventListener)
+    }
   }, [open])
 
   useLayoutEffect(() => {
@@ -137,7 +141,7 @@ export function ModelSelect(
       const h = el?.offsetHeight ?? 0
       const MARGIN = 12
       const vw = window.innerWidth
-      const vh = window.innerHeight
+      const vh = window.visualViewport?.height ?? window.innerHeight
       let x = r.right - w
       let y = r.top - h - 8
       if (w > 0) x = Math.min(Math.max(x, MARGIN), vw - w - MARGIN)
@@ -393,7 +397,7 @@ export function ModelSelect(
                 ))}
             </>
           )}
-        </div>, document.body
+        </div>, document.body,
       )}
       {toast !== null && (
         <Toast

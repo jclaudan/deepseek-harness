@@ -78,6 +78,7 @@
   min-width: min(240px, calc(100vw - 32px));
   max-width: min(420px, calc(100vw - 32px));
   max-height: min(360px, calc(100vh - 96px));
+  max-height: min(360px, calc(100dvh - 96px));
   overflow: hidden;
   padding: 4px;
   /* Surface tokens match the Menu primitive card (ui-primitives
@@ -145,6 +146,9 @@
 .groups {
   min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .group + .group {
@@ -274,4 +278,17 @@
 .cellChevron {
   flex: 0 0 auto;
   color: var(--dsw-alias-label-tertiary);
+}
+
+@media (max-width: 640px) {
+  .menu {
+    min-width: min(280px, calc(100vw - 16px));
+    max-width: calc(100vw - 16px);
+    max-height: min(60dvh, calc(100dvh - 96px));
+  }
+  .menuPortal {
+    left: 8px !important;
+    right: 8px !important;
+    width: auto;
+  }
 }
