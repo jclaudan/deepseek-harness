@@ -140,9 +140,6 @@ export function AppFrame({
     ? 0
     : panels.sidebar === 0 ? SIDEBAR_DEFAULT : panels.sidebar
   const cols = computeColumns(viewport, sidebarPreference, detailsSession === undefined ? 0 : panels.details)
-  const isMobile = viewport < 640
-  const sidebarWidthForGrid = isMobile && sidebarCollapsed ? 0 : isMobile && !sidebarCollapsed ? 0 : cols.sidebar
-  const sidebarOverlayOpen = isMobile && !sidebarCollapsed
   const colsRef = useRef(cols)
   colsRef.current = cols
 
@@ -168,58 +165,36 @@ export function AppFrame({
     <div
       ref={frameRef}
       className={css.frame}
-      style={{ gridTemplateColumns: `${sidebarWidthForGrid}px minmax(0, 1fr) ${cols.details}px` }}
+      style={{ gridTemplateColumns: `${cols.sidebar}px minmax(0, 1fr) ${cols.details}px` }}
       data-sidebar-collapsed={sidebarCollapsed || undefined}
       data-details-collapsed={cols.details === 0 || undefined}
       data-dragging={dragging || undefined}
-      data-mobile-overlay={sidebarOverlayOpen || undefined}
     >
-      <div className={css.sidebarCol} data-mobile-hidden={isMobile && sidebarCollapsed || undefined}>
+      <div className={css.sidebarCol}>
         {/* Render-site slot call with live concession output: a closed
             sidebar keeps the mounted slot at the compact-rail width, and the
             component sees its rendered state as owner params decided here
             (collapsed follows the resolved rail, so a derived auto-collapse
             renders the rail UI too). */}
         {renderSlot('sidebar', {
-          collapsed: sidebarCollapsed && !isMobile,
-          width: sidebarOverlayOpen ? 280 : cols.sidebar,
+          collapsed: sidebarCollapsed,
+          width: cols.sidebar,
         })}
       </div>
-      {sidebarOverlayOpen && (
-        <button
-          type="button"
-          aria-label="Close sidebar"
-          className={css.mobileBackdrop}
-          onClick={() => actions.toggleSidebar()}
-        />
-      )}
-
       <>
         {/* Both column occupants stay at fixed tree positions from first
             paint — no loading gate: a bare status line reads worse than
             the shell's own pending rendering. The conversation
             is session-maybe; the strict details entry naturally renders
             empty while no session is current. */}
-        <CenterColumn>
-          {isMobile && sidebarCollapsed && (
-            <button
-              type="button"
-              aria-label="Open sidebar"
-              className={css.mobileHamburger}
-              onClick={() => actions.toggleSidebar()}
-            >
-              <span className={css.mobileHamburgerIcon} aria-hidden="true">☰</span>
-            </button>
-          )}
-          {renderSlot('conversation', {})}
-        </CenterColumn>
+        <CenterColumn>{renderSlot('conversation', {})}</CenterColumn>
         <DetailsColumn>{renderSlot('details', {})}</DetailsColumn>
       </>
       <div className={css.overlayLayer} data-shell-overlay>
         {renderSlot('shell.overlay', {})}
       </div>
       {/* The collapsed rail is fixed-width: no resize handle while closed. */}
-      {!sidebarCollapsed && !isMobile && <DragHandle side="sidebar" left={cols.sidebar} onStart={onSidebarStart} onDrag={onSidebarDrag} onEnd={onDragEnd} />}
+      {!sidebarCollapsed && <DragHandle side="sidebar" left={cols.sidebar} onStart={onSidebarStart} onDrag={onSidebarDrag} onEnd={onDragEnd} />}
       {cols.details > 0 && <DragHandle side="details" left={viewport - cols.details} onStart={onDetailsStart} onDrag={onDetailsDrag} onEnd={onDragEnd} />}
     </div>
   )
