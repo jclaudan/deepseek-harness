@@ -79,7 +79,8 @@
   max-width: min(420px, calc(100vw - 32px));
   max-height: min(360px, calc(100vh - 96px));
   max-height: min(360px, calc(100dvh - 96px));
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
   padding: 4px;
   /* Surface tokens match the Menu primitive card (ui-primitives
    * Menu.module.css) so every dropdown reads as the same material. */
@@ -146,9 +147,11 @@
 .groups {
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   touch-action: pan-y;
+  scrollbar-gutter: stable;
 }
 
 .group + .group {
@@ -172,8 +175,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  width: auto;
-  min-width: 100%;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 38px;
   padding: 6px 8px;
   border: none;
@@ -183,6 +187,7 @@
   color: inherit;
   text-align: left;
   cursor: pointer;
+  overflow: hidden;
 }
 
 .option:hover:not(:disabled),
@@ -232,6 +237,18 @@
   place-items: center;
   flex: 0 0 18px;
   color: var(--dsw-alias-label-primary);
+}
+
+.effortBadge {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 /* Two-level root cells (figma 496:26454 .Menu_cell): 40px row, 10px side

@@ -331,6 +331,11 @@ export function ModelSelect(
                       <div className={css.groupTitle} id={headingId}>{group.name}</div>
                       {group.models.map((model) => {
                         const selected = state.current?.provider === group.id && state.current.model === model.id
+                        const defaultEffort = model.reasoning?.defaultEffort
+                        const defaultEffortLabel = defaultEffort === undefined
+                          ? undefined
+                          : model.reasoning?.efforts.find(e => e.id === defaultEffort)?.name
+                            ?? defaultEffort
                         return (
                           <button
                             ref={itemRef()}
@@ -349,6 +354,9 @@ export function ModelSelect(
                                 <span className={css.description}>{model.description}</span>
                               )}
                             </span>
+                            {defaultEffortLabel !== undefined && (
+                              <span className={css.effortBadge}>{defaultEffortLabel}</span>
+                            )}
                             <span className={css.check}>
                               {selected ? <IconCheckOutline16 /> : null}
                             </span>
