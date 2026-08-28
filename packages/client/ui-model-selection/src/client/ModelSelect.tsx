@@ -162,7 +162,8 @@ export function ModelSelect(
   if (!available) return null
 
   const show = (): void => {
-    setPane('root')
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 640
+    setPane(isMobile ? 'model' : 'root')
     setOpen(true)
     reload()
   }
@@ -197,7 +198,8 @@ export function ModelSelect(
   }
 
   const onBlur = (event: FocusEvent<HTMLDivElement>): void => {
-    if (event.relatedTarget instanceof Node && rootRef.current?.contains(event.relatedTarget)) return
+    if (event.relatedTarget instanceof Node
+      && (rootRef.current?.contains(event.relatedTarget) || menuRef.current?.contains(event.relatedTarget))) return
     close()
   }
 
