@@ -173,7 +173,6 @@ export function AppFrame({
       data-details-collapsed={cols.details === 0 || undefined}
       data-dragging={dragging || undefined}
       data-mobile-overlay={sidebarOverlayOpen || undefined}
-      data-mobile-details={isMobile && cols.details > 0 || undefined}
     >
       <div className={css.sidebarCol} data-mobile-hidden={isMobile && sidebarCollapsed || undefined}>
         {/* Render-site slot call with live concession output: a closed
@@ -194,15 +193,7 @@ export function AppFrame({
           onClick={() => actions.toggleSidebar()}
         />
       )}
-      {isMobile && cols.details > 0 && (
-        <button
-          type="button"
-          aria-label="Close details"
-          className={css.mobileBackdrop}
-          style={{ zIndex: 24 } as React.CSSProperties}
-          onClick={() => actions.closeDetails()}
-        />
-      )}
+
       <>
         {/* Both column occupants stay at fixed tree positions from first
             paint — no loading gate: a bare status line reads worse than

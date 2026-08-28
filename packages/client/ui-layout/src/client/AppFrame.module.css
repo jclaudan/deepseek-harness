@@ -168,17 +168,5 @@
     border-right: 1px solid var(--dsw-alias-border-l1);
     display: block;
   }
-  .frame[data-mobile-details] .detailsCol {
-    position: fixed;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 360px !important;
-    max-width: 85vw;
-    z-index: 26;
-    background: var(--dsw-alias-bg-base);
-    border-left: 1px solid var(--dsw-alias-border-l2);
-    box-shadow: var(--dsw-shadow-lv3);
-    display: block;
-  }
+
 }
