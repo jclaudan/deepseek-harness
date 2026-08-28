@@ -17,8 +17,9 @@ services:
       SEARXG_BASE_URL: "${SEARXG_BASE_URL:-http://192.168.1.29:8080/}"
     restart: unless-stopped
     shm_size: '512M'
-    # volumes:                                 # décommentez pour dev
-    #   - ./:/usr/src/app
+    volumes:
+      - dsh-home:/root/.dsh
+      - dsh-data:/usr/src/app/data
 
   playwright:
     image: mcr.microsoft.com/playwright:v1.48.0-jammy
@@ -32,3 +33,7 @@ services:
     working_dir: /work
     entrypoint: ["npx", "playwright", "test", "--reporter=list"]
     profiles: ["playwright"]
+
+volumes:
+  dsh-home:
+  dsh-data:
