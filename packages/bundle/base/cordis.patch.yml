@@ -411,6 +411,9 @@
       config:
         apiKeyEnv: DEEPSEEK_API_KEY
 
+    - id: web-search-searxg
+      name: '@deepseek-ai/dsh-web-search-searxg'
+
     - id: tool-web
       name: '@deepseek-ai/dsh-tool-web'
       config:

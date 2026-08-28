@@ -12,6 +12,9 @@ services:
       # LLM JanAI OpenAI-compatible (bootstrap-only: doit être dans l'environnement de lancement, pas dans .env)
       DEEPSEEK_BASE_URL: "${DEEPSEEK_BASE_URL:-}"
       DEEPSEEK_API_KEY: "${DEEPSEEK_API_KEY:-}"
+      # Web search provider (searxg)
+      DSH_WEB_SEARCH_PROVIDER: "${DSH_WEB_SEARCH_PROVIDER:-}"
+      SEARXG_BASE_URL: "${SEARXG_BASE_URL:-}"
     restart: unless-stopped
     shm_size: '512M'
     # volumes:                                 # décommentez pour dev
