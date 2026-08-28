@@ -16,3 +16,16 @@ services:
     shm_size: '512M'
     # volumes:                                 # décommentez pour dev
     #   - ./:/usr/src/app
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.48.0-jammy
+    container_name: deepseek-playwright
+    depends_on: [dsh]
+    environment:
+      PLAYWRIGHT_BASE_URL: http://dsh:3080
+    volumes:
+      - ./:/work
+      - /work/node_modules
+    working_dir: /work
+    entrypoint: ["npx", "playwright", "test", "--reporter=list"]
+    profiles: ["playwright"]
