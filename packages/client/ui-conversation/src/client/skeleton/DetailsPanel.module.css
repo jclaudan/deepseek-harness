@@ -49,6 +49,13 @@
   background: var(--dsw-alias-interactive-bg-hover);
 }
 
+@media (max-width: 640px) {
+  .close {
+    width: 44px;
+    height: 44px;
+  }
+}
+
 .body {
   flex: 1;
   min-height: 0;
