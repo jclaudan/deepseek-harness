@@ -119,7 +119,8 @@
 }
 
 .sidebarCol[data-mobile-hidden] {
-  display: none;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .mobileBackdrop {
