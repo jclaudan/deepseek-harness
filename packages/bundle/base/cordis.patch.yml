@@ -404,7 +404,7 @@
     - id: web
       name: '@deepseek-ai/dsh-web'
       config:
-        searchProvider: deepseek-official
+        # searchProvider is set via DSH_WEB_SEARCH_PROVIDER env var (see docker-compose.yml)
 
     - id: web-search-deepseek
       name: '@deepseek-ai/dsh-web-search-deepseek'
