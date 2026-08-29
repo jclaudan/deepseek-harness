@@ -45,20 +45,19 @@ export class SearxgSearchProvider implements WebSearchProvider {
 
   async search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearchResult> {
     const numResults = request.maxResults ?? 10
+    const url = new URL(`${this.options.baseURL}/search`)
+    url.searchParams.set('q', request.query)
+    url.searchParams.set('format', 'json')
+    url.searchParams.set('number', String(numResults))
     let response: Response
     try {
-      response = await fetch(`${this.options.baseURL}/api`, {
-        method: 'POST',
+      response = await fetch(url.toString(), {
+        method: 'GET',
         redirect: 'error',
         headers: {
-          'content-type': 'application/json',
           'accept': 'application/json',
           'user-agent': USER_AGENT,
         },
-        body: JSON.stringify({
-          q: request.query,
-          number: numResults,
-        }),
         ...signal !== undefined ? { signal } : {},
       })
     } catch (err: unknown) {

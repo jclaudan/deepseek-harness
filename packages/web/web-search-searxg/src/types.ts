@@ -1,5 +1,5 @@
 /**
- * Wire types for the SearXNG search API (`POST {baseURL}/api`). Types
+ * Wire types for the SearXNG search API (`GET {baseURL}/search?format=json`). Types
  * only — no runtime code. SearXNG returns a flat `results[]`; each entry
  * carries a URL, optional title, optional `publishedDate`, and a `content`
  * snippet.
@@ -7,7 +7,7 @@
  * @module @deepseek-ai/dsh-web-search-searxg/types
  */
 
-/** Request body sent to SearXNG's search endpoint. */
+/** Query parameters for SearXNG's search endpoint (`GET /search`). */
 export interface SearxgSearchRequest {
   q: string
   number?: number

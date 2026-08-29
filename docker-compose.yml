@@ -14,12 +14,22 @@ services:
       DEEPSEEK_API_KEY: "${DEEPSEEK_API_KEY:-}"
       # Web search provider (searxg) — bootstrap-only, must be set here not in .env
       DSH_WEB_SEARCH_PROVIDER: "searxg"
-      SEARXG_BASE_URL: "${SEARXG_BASE_URL:-http://192.168.1.29:8080/}"
+      SEARXG_BASE_URL: "${SEARXG_BASE_URL:-http://searxng:8080}"
     restart: unless-stopped
     shm_size: '512M'
     volumes:
       - dsh-home:/root/.dsh
       - dsh-data:/usr/src/app/data
+
+  searxng:
+    image: searxng/searxng:latest
+    container_name: deepseek-searxng
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    shm_size: '256m'
+    volumes:
+      - ./searxng-settings.yml:/usr/local/searxng/searx/settings.yml
 
   playwright:
     image: mcr.microsoft.com/playwright:v1.48.0-jammy
