@@ -1,8 +1,10 @@
 /** Message value types, identity, and immutable construction helpers. */
 
-import { MessageId, type CallId } from './brand.ts'
-import { deepFreeze } from './call-config.ts'
-import type { ContentBlock, StreamChunk, ToolResultBlock } from './types.ts'
+import { randomUUID } from '@deepseek-ai/dsh-util-crypto'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import { deepFreeze } from '@deepseek-ai/dsh-util-values'
+import type { MessageId, ToolCallId } from './brand.ts'
+import type { ContentBlock, ToolResultBlock } from './types.ts'
 
 /** Provider/model identity and adapter-private replay data for an assistant message. */
 export interface AssistantProvenance {
@@ -26,7 +28,7 @@ export interface ModelMessageSource extends AssistantProvenance {
 /** Required source of a user-role message carrying one tool result. */
 export interface ToolMessageSource {
   kind: 'tool'
-  callId: CallId
+  callId: ToolCallId
 }
 
 /**
@@ -178,20 +180,9 @@ export function freezeMessage<T extends Message>(message: T): T {
 export function createMessage<T extends NewMessage>(
   input: T & { readonly id?: never },
 ): T & Pick<Message, 'id'> {
-  const c = globalThis.crypto as Crypto | undefined
-  let uuid: string
-  if (c?.randomUUID !== undefined) uuid = c.randomUUID()
-  else {
-    const bytes = c!.getRandomValues(new Uint8Array(16))
-    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
-    view.setUint8(6, (view.getUint8(6) & 0x0f) | 0x40)
-    view.setUint8(8, (view.getUint8(8) & 0x3f) | 0x80)
-    const hex = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('')
-    uuid = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
-  }
   return freezeMessage({
     ...input,
-    id: MessageId(uuid),
+    id: brandString<MessageId>(randomUUID()),
   })
 }
 
@@ -229,7 +220,7 @@ export function createAssistantMessage(
 
 /** Input whose acceptance creates one tool-result message. */
 export interface ToolResultMessageInput {
-  readonly callId: CallId
+  readonly callId: ToolCallId
   readonly content: ContentBlock[]
   readonly isError: boolean
 }
@@ -249,24 +240,4 @@ export function createToolResultMessage(input: ToolResultMessageInput): ToolResu
       isError: input.isError,
     }],
   })
-}
-
-/**
- * Whether a stream chunk carries visible model output (the first-token
- * boundary shared by client step timing and the whole-log sessionStats
- * projection). Empty deltas (heartbeats, empty tool-call frames) do not count
- * as a first token.
- * @param chunk - the stream chunk to test.
- * @returns true when the chunk contains a non-empty text/reasoning/tool delta.
- */
-export function isTokenDelta(chunk: StreamChunk): boolean {
-  switch (chunk.type) {
-    case 'text-delta':
-    case 'reasoning-delta':
-      return chunk.text !== ''
-    case 'tool-call-delta':
-      return chunk.argumentsDelta !== '' || chunk.name !== undefined
-    default:
-      return false
-  }
 }
