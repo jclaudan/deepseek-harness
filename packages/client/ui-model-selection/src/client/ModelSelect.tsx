@@ -20,7 +20,7 @@ import clsx from 'clsx'
 import type { ModelReasoningEffort, ModelSelection } from '@deepseek-ai/dsh-api-remotes/client'
 import {
   IconCheckOutline16, IconChevronDownOutline14, IconChevronRightOutline14,
-  IconWarningOutline16, Toast,
+  IconDataOutline16, IconWarningOutline16, Toast,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ModelSelectInjected } from './slots.ts'
@@ -35,6 +35,9 @@ interface EffortChoice {
   effort: string | undefined
   label: string
 }
+
+/** Unplaced portal card: hidden but laid out at a fixed origin so offsetWidth/offsetHeight are real (Menu primitive's measure pass). */
+const MEASURE_STYLE: CSSProperties = { visibility: 'hidden', left: 0, top: 0 }
 
 /**
  * Render the composer model seat.
@@ -62,8 +65,8 @@ export function ModelSelect(
   const rootRef = useRef<HTMLDivElement | null>(null)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
   const menuRef = useRef<HTMLDivElement | null>(null)
-  const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [menuPos, setMenuPos] = useState<CSSProperties | null>(null)
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
   const id = useId()
 
   const choices = useMemo(() => state.groups.flatMap(group =>
@@ -110,36 +113,40 @@ export function ModelSelect(
 
   useEffect(() => {
     if (!open) return
-    const closeOutside = (event: MouseEvent | TouchEvent): void => {
-      if (!rootRef.current?.contains(event.target as Node) && !menuRef.current?.contains(event.target as Node)) setOpen(false)
+    const closeOutside = (event: MouseEvent): void => {
+      // The portaled card is outside the trigger subtree; check both.
+      if (rootRef.current?.contains(event.target as Node) === true) return
+      if (menuRef.current?.contains(event.target as Node) === true) return
+      setOpen(false)
     }
-    document.addEventListener('mousedown', closeOutside as EventListener)
-    document.addEventListener('touchstart', closeOutside as EventListener, { passive: true })
-    return () => {
-      document.removeEventListener('mousedown', closeOutside as EventListener)
-      document.removeEventListener('touchstart', closeOutside as EventListener)
-    }
+    document.addEventListener('mousedown', closeOutside)
+    return () => { document.removeEventListener('mousedown', closeOutside) }
   }, [open])
 
+  // Portaled placement (the Menu primitive's portal rules: fixed from the
+  // anchor rect, measured before paint, clamped inside the viewport): above
+  // the trigger, right edges aligned. Depends on pane and directory state
+  // because pane switches and async catalog loads resize the card.
+  /* jscpd:ignore-start -- deliberate mirror of ui-primitives useAnchoredPosition:
+     that hook only places from the anchor's LEFT edge, while this card aligns
+     right edges (x = rect.right - width), so the measure-and-clamp plumbing repeats. */
   useLayoutEffect(() => {
     if (!open) { setMenuPos(null); return }
-    const place = () => {
-      const r = triggerRef.current?.getBoundingClientRect() ?? null
-      if (r === null) return
-      const el = menuRef.current
-      const w = el?.offsetWidth ?? 0
-      const h = el?.offsetHeight ?? 0
+    const place = (): void => {
+      /* v8 ignore next 2 -- the trigger ref is attached whenever the menu is open. */
+      const rect = triggerRef.current?.getBoundingClientRect()
+      if (rect === undefined) return
       const MARGIN = 12
-      const vw = window.innerWidth
-      const vh = window.visualViewport?.height ?? window.innerHeight
-      let x = r.right - w
-      let y = r.top - h - 8
-      if (w > 0) x = Math.min(Math.max(x, MARGIN), vw - w - MARGIN)
-      if (h > 0) y = Math.min(Math.max(y, MARGIN), vh - h - MARGIN)
-      // hidden pre-render: measure at 0,0 then place
-      if (w === 0 && h === 0) setMenuPos({ visibility: 'hidden', left: 0, top: 0 } as CSSProperties)
-      else setMenuPos({ left: x, top: y } as CSSProperties)
+      const lw = menuRef.current?.offsetWidth ?? 0
+      const lh = menuRef.current?.offsetHeight ?? 0
+      let x = rect.right - lw
+      let y = rect.top - 8 - lh
+      if (lw > 0) x = Math.min(Math.max(x, MARGIN), window.innerWidth - lw - MARGIN)
+      if (lh > 0) y = Math.min(Math.max(y, MARGIN), window.innerHeight - lh - MARGIN)
+      setMenuPos({ left: x, top: y })
     }
+    // First run measures the hidden pre-render (same commit as `open`), so
+    // the card lands placed before anything paints.
     place()
     window.addEventListener('scroll', place, true)
     window.addEventListener('resize', place)
@@ -147,13 +154,13 @@ export function ModelSelect(
       window.removeEventListener('scroll', place, true)
       window.removeEventListener('resize', place)
     }
-  }, [open, pane, state.groups.length])
+  }, [open, pane, state])
+  /* jscpd:ignore-end */
 
   if (!available) return null
 
   const show = (): void => {
-    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 640
-    setPane(isMobile ? 'model' : 'root')
+    setPane('root')
     setOpen(true)
     reload()
   }
@@ -188,8 +195,10 @@ export function ModelSelect(
   }
 
   const onBlur = (event: FocusEvent<HTMLDivElement>): void => {
-    if (event.relatedTarget instanceof Node
-      && (rootRef.current?.contains(event.relatedTarget) || menuRef.current?.contains(event.relatedTarget))) return
+    if (event.relatedTarget instanceof Node && (
+      rootRef.current?.contains(event.relatedTarget) === true
+      || menuRef.current?.contains(event.relatedTarget) === true
+    )) return
     close()
   }
 
@@ -269,21 +278,24 @@ export function ModelSelect(
           }
         }}
       >
+        <IconDataOutline16 className={css.triggerIcon} size={16} />
         <span className={css.triggerLabel}>{modelLabel}</span>
         {effortLabel !== undefined && <span className={css.triggerEffort}>{effortLabel}</span>}
         <IconChevronDownOutline14 className={clsx(css.chevron, open && css.chevronOpen)} />
       </button>
 
+      {/* Portaled to body (Menu primitive's portal mode) so the sidebar and
+          column overflow clips cannot crop the card; synthetic events still
+          bubble through this React subtree, keeping onKeyDown/onBlur live. */}
       {open && createPortal(
         <div
           ref={menuRef}
           id={`${id}-menu`}
-          className={clsx(css.menu, css.menuPortal)}
+          className={css.menu}
+          style={menuPos ?? MEASURE_STYLE}
           role="menu"
           aria-label={t('menu.aria')}
           aria-busy={state.status === 'loading' || busy}
-          style={menuPos ?? { visibility: 'hidden', left: 0, top: 0 } as CSSProperties}
-          onClick={(e) => { e.stopPropagation() }}
         >
           {pane === 'root' && (
             <>
@@ -327,11 +339,6 @@ export function ModelSelect(
                       <div className={css.groupTitle} id={headingId}>{group.name}</div>
                       {group.models.map((model) => {
                         const selected = state.current?.provider === group.id && state.current.model === model.id
-                        const defaultEffort = model.reasoning?.defaultEffort
-                        const defaultEffortLabel = defaultEffort === undefined
-                          ? undefined
-                          : model.reasoning?.efforts.find(e => e.id === defaultEffort)?.name
-                            ?? defaultEffort
                         return (
                           <button
                             ref={itemRef()}
@@ -347,9 +354,6 @@ export function ModelSelect(
                             <span className={css.optionCopy}>
                               <span className={css.modelName}>{model.name}</span>
                             </span>
-                            {defaultEffortLabel !== undefined && (
-                              <span className={css.effortBadge}>{defaultEffortLabel}</span>
-                            )}
                             <span className={css.check}>
                               {selected ? <IconCheckOutline16 /> : null}
                             </span>
@@ -397,7 +401,8 @@ export function ModelSelect(
                 ))}
             </>
           )}
-        </div>, document.body,
+        </div>,
+        document.body,
       )}
       {toast !== null && (
         <Toast
