@@ -87,6 +87,12 @@ None, as the package is a browser-side UI plugin layer that registers nothing mo
 
 None; this package neither assembles nor sends a provider request.
 
+## Configure
+
+| Field | default | meaning |
+|---|---|---|
+| `remoteSettings` | `false` | Allow durable Host settings on non-loopback pages. Deployment-varying; set per composition in your profile overlay or bundle patch. |
+
 ## Known Limitations and Deferred Work
 
 <a id="known-limitations-and-deferred-work"></a>
@@ -94,7 +100,7 @@ None; this package neither assembles nor sends a provider request.
 
 These limits define where the settings transport cannot reach; they are current package constraints.
 
-- **Non-loopback pages get no durable settings** — this Client keeps Host persistence disabled there, so a scope starts `unavailable` and never crosses the wire; every row it backs is inert even though Connection authentication covers the API.
+- **Non-loopback pages get no durable settings by default** — this Client keeps Host persistence disabled there, so a scope starts `unavailable` and never crosses the wire; every row it backs is inert even though Connection authentication covers the API. Opt in per composition via the `remoteSettings` config (see Configure).
 
 <a id="dev-note"></a>
 ### Dev Note

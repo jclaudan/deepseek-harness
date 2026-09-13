@@ -15,6 +15,18 @@ if [ -n "${TRUSTED_HOSTS}" ]; then
   done
 fi
 
+# DSH_REMOTE_SETTINGS: opt in to durable Host settings on non-loopback
+# pages (LAN browsers). Off by default for security; set to "1" to enable.
+if [ "${DSH_REMOTE_SETTINGS}" = "1" ]; then
+  DSH_REMOTE_SETTINGS_PATCH=$(mktemp)
+  cat > "${DSH_REMOTE_SETTINGS_PATCH}" <<'EOF'
+- id: ui-settings
+  config:
+    remoteSettings: true
+EOF
+  DSH_CMD_ARGS="${DSH_CMD_ARGS} --patch ${DSH_REMOTE_SETTINGS_PATCH}"
+fi
+
 # Start the dsh web app in background, write logs
 echo "Starting dsh web: pnpm run dsh -- ${DSH_CMD_ARGS}"
 pnpm run dsh -- ${DSH_CMD_ARGS} >> /var/log/dsh-web.log 2>&1 &

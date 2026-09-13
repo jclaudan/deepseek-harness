@@ -12,6 +12,7 @@
  * Export discipline: packages/client/AGENTS.md.
  */
 import type { Context } from '@deepseek-ai/cordis'
+import z from '@deepseek-ai/schemastery'
 // Type-only: the ctx.remote merge, the fixed Host facts, and the carrier's
 // `connection/reset` lifecycle event, all through the assembly package.
 import type {} from '@deepseek-ai/dsh-api-remotes/client'
@@ -36,6 +37,16 @@ export type {
   SettingsDescribeFace, SettingsDescribeView, SettingsMirrorSnapshot,
 } from './settings-mirror.ts'
 
+/** Browser-side opt-in: allow durable Host settings on non-loopback pages. */
+export interface Config {
+  remoteSettings: boolean
+}
+
+/** Default off: non-loopback browsers keep settings process-local. */
+export const Config: z<Config> = z.object({
+  remoteSettings: z.boolean().default(false),
+})
+
 /**
  * Required services: the Remote namespace the mirror reads through and the
  * forwarded settings invalidation it refreshes on.
@@ -51,11 +62,11 @@ export const inject = ['remote', 'remote.settings']
  * bound to each consuming plugin's context.
  * @param ctx - client root context.
  */
-export function apply(ctx: Context): void {
+export function apply(ctx: Context, config?: Config): void {
   const schema = new SettingsSchemaService(ctx)
   // Resolved once here, where `remote` is declared in this plugin's own
   // `inject`; the binder hands the same answer to every scope it binds.
-  const persistence = ctx.remote.$host.isLoopback ? 'host' : 'memory'
+  const persistence = (ctx.remote.$host.isLoopback || (config?.remoteSettings ?? false)) ? 'host' : 'memory'
   const mirror = new SettingsDescribeMirror(ctx, persistence)
   ctx.effect(() => {
     const disposers = [

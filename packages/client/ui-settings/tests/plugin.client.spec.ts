@@ -50,4 +50,34 @@ describe('settings domain base plugin', () => {
     await Promise.resolve()
     expect(describeCall).toHaveBeenCalledTimes(1)
   })
+
+  it('reads the host on non-loopback when remoteSettings is opted in', async () => {
+    const describeCall = vi.fn().mockResolvedValue({
+      ok: true, value: { writable: true, hasDocument: true, namespaces: [] },
+    })
+    const ctx = new Context()
+    const remote = new TestRemote(ctx, { settings: { describe: describeCall } })
+    remote.$host.isLoopback = false
+    const fiber = ctx.plugin({ inject: [...inject], apply }, { remoteSettings: true })
+    await fiber.await()
+    expect(ctx.get('settingsScope')).toBeInstanceOf(SettingsScopeBinder)
+    await vi.waitFor(() => { expect(describeCall).toHaveBeenCalledTimes(1) })
+    await fiber.dispose()
+  })
+
+  it('stays unavailable on non-loopback without the opt-in', async () => {
+    const describeCall = vi.fn().mockResolvedValue({
+      ok: true, value: { writable: true, hasDocument: true, namespaces: [] },
+    })
+    const ctx = new Context()
+    const remote = new TestRemote(ctx, { settings: { describe: describeCall } })
+    remote.$host.isLoopback = false
+    const fiber = ctx.plugin({ inject: [...inject], apply })
+    await fiber.await()
+    expect(ctx.get('settingsScope')).toBeInstanceOf(SettingsScopeBinder)
+    const mirror = ctx.get('settingsScope') as SettingsScopeBinder
+    expect(mirror.describe().getSnapshot().status).toBe('unavailable')
+    expect(describeCall).not.toHaveBeenCalled()
+    await fiber.dispose()
+  })
 })

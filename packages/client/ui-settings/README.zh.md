@@ -87,6 +87,12 @@ kind: "package-reference"
 
 无；该包既不组装也不发送提供方请求。
 
+## 配置
+
+| 字段 | 默认值 | 含义 |
+|---|---|---|
+| `remoteSettings` | `false` | 允许在非 loopback 页面使用持久化 Host 设置。按 composition 设定：在 profile overlay 或 bundle patch 中配置。 |
+
 ## 已知限制与延期工作
 
 <a id="known-limitations-and-deferred-work"></a>
