@@ -1,8 +1,9 @@
 FROM node:24-bookworm-slim
 
-# Installer utilitaires, pnpm, nginx et netcat
+# Installer utilitaires, pnpm, nginx et netcat + toolchain native (cc pour native/system)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl gnupg2 nginx netcat-openbsd git openssl \
+    build-essential python3 \
   && rm -rf /var/lib/apt/lists/*
 
 # Activer corepack et préparer pnpm exact
