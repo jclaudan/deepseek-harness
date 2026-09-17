@@ -172,9 +172,11 @@ export class ModelsSettingsStore {
   /**
    * Refresh the whole page snapshot: the provider directory and the mirror's
    * settings answer in parallel, then one batched credential describe over
-   * every referenced ref. Provider failure or absence of an initial settings
-   * answer keeps the last good rows and surfaces an error; a failed settings
-   * refresh reuses the mirror's held view.
+   * every referenced ref. Provider failure keeps the last good rows and
+   * surfaces an error; a failed settings refresh reuses the mirror's held
+   * view. When settings are unavailable (process-local mode), the provider
+   * directory still loads with read-only settings — the page renders usable
+   * rows rather than blocking on a settings answer it cannot get.
    * @returns nothing; the snapshot carries the outcome.
    */
   async load(): Promise<void> {
@@ -188,13 +190,10 @@ export class ModelsSettingsStore {
     if (!registered.ok) { this.failLoad(generation, registered.error.message); return }
     if (!declared.ok) { this.failLoad(generation, declared.error.message); return }
     const mirrored = this.describeFace.getSnapshot()
-    if (mirrored.view === undefined) {
-      this.failLoad(generation, mirrored.error ?? 'settings are unavailable in this browser')
-      return
-    }
+    const { view } = mirrored
     const providers = joinProviderDirectory(registered.value, declared.value)
-    const writable = mirrored.view.writable
-    const views: readonly SettingsNamespaceView[] = mirrored.view.namespaces
+    const writable = view === undefined ? false : view.writable
+    const views: readonly SettingsNamespaceView[] = view === undefined ? [] : view.namespaces
     const namespaces = new Map(views.map(view => [view.ns, view]))
     const rows: ProviderRow[] = providers.map((entry) => {
       const namespace = namespaces.get(entry.settingsNs)

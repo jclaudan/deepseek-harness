@@ -265,14 +265,17 @@ describe('edge joins', () => {
     expect(state.rows[0]?.derivedCredential).toMatchObject({ configured: true })
   })
 
-  it('surfaces a settings describe failure', async () => {
+  it('loads the provider directory with read-only settings when the describe fails', async () => {
     const { ctx, mirror } = api({ describeSettings: () => Promise.resolve(remoteFail('settings down')) })
     const store = new ModelsSettingsStore(ctx, settingsSchema, mirror)
     await store.load()
-    expect(store.store.getSnapshot()).toMatchObject({ status: 'error', error: 'settings down' })
+    const state = store.store.getSnapshot()
+    expect(state.status).toBe('ready')
+    expect(state.writable).toBe(false)
+    expect(state.rows).toHaveLength(4)
   })
 
-  it('reports a terminally unavailable settings mirror precisely', async () => {
+  it('loads the provider directory with read-only settings when the mirror is unavailable', async () => {
     const { ctx } = api()
     const store = new ModelsSettingsStore(
       ctx,
@@ -280,10 +283,11 @@ describe('edge joins', () => {
       new SettingsDescribeMirror(ctx, 'memory'),
     )
     await store.load()
-    expect(store.store.getSnapshot()).toMatchObject({
-      status: 'error',
-      error: 'settings are unavailable in this browser',
-    })
+    const state = store.store.getSnapshot()
+    expect(state.status).toBe('ready')
+    expect(state.writable).toBe(false)
+    expect(state.rows).toHaveLength(4)
+    expect(state.namespaces.size).toBe(0)
   })
 
   it('reuses a held settings view after its refresh fails', async () => {
