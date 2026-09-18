@@ -5,16 +5,9 @@ set -e
 APP_PORT=3081
 
 # Build argument list for dsh web
-DSH_CMD_ARGS="web --no-open --port ${APP_PORT}"
-
-# TRUSTED_HOSTS env : can contain one or more hosts separated by spaces
-# e.g. TRUSTED_HOSTS="192.168.1.10:3080 192.168.1.11"
-if [ -n "${TRUSTED_HOSTS}" ]; then
-  for h in ${TRUSTED_HOSTS}; do
-    DSH_CMD_ARGS="${DSH_CMD_ARGS} --trusted-host ${h}"
-  done
-fi
-
+# Launcher flags (--patch) must come before app flags (--port/--trusted-host)
+# or Commander treats them as unknown app options.
+DSH_PATCH_ARGS=""
 # DSH_REMOTE_SETTINGS: opt in to durable Host settings on non-loopback
 # pages (LAN browsers). Off by default for security; set to "1" to enable.
 if [ "${DSH_REMOTE_SETTINGS}" = "1" ]; then
@@ -24,12 +17,23 @@ if [ "${DSH_REMOTE_SETTINGS}" = "1" ]; then
   config:
     remoteSettings: true
 EOF
-  DSH_CMD_ARGS="${DSH_CMD_ARGS} --patch ${DSH_REMOTE_SETTINGS_PATCH}"
+  DSH_PATCH_ARGS=" --patch ${DSH_REMOTE_SETTINGS_PATCH}"
+fi
+DSH_CMD_ARGS="web${DSH_PATCH_ARGS} --no-open --port ${APP_PORT}"
+
+# TRUSTED_HOSTS env : can contain one or more hosts separated by spaces
+# e.g. TRUSTED_HOSTS="192.168.1.10:3080 192.168.1.11"
+if [ -n "${TRUSTED_HOSTS}" ]; then
+  for h in ${TRUSTED_HOSTS}; do
+    DSH_CMD_ARGS="${DSH_CMD_ARGS} --trusted-host ${h}"
+  done
 fi
 
 # Start the dsh web app in background, write logs
-echo "Starting dsh web: pnpm run dsh -- ${DSH_CMD_ARGS}"
-pnpm run dsh -- ${DSH_CMD_ARGS} >> /var/log/dsh-web.log 2>&1 &
+# Use direct node invocation to avoid pnpm's extra `--` separator which breaks
+# Commander's `web --patch` parsing (see apps/cli/src/args.ts).
+echo "Starting dsh web: node --import tsx/esm apps/cli/src/bin.ts ${DSH_CMD_ARGS}"
+node --import tsx/esm apps/cli/src/bin.ts ${DSH_CMD_ARGS} >> /var/log/dsh-web.log 2>&1 &
 
 DSH_PID=$!
 
