@@ -37,14 +37,14 @@ export type {
   SettingsDescribeFace, SettingsDescribeView, SettingsMirrorSnapshot,
 } from './settings-mirror.ts'
 
-/** Browser-side opt-in: allow durable Host settings on non-loopback pages. */
+/** Browser-side: allow durable Host settings on non-loopback pages (LAN). */
 export interface Config {
   remoteSettings: boolean
 }
 
-/** Default off: non-loopback browsers keep settings process-local. */
+/** Default on: LAN browsers get durable Host settings (opt-out with remoteSettings:false). */
 export const Config: z<Config> = z.object({
-  remoteSettings: z.boolean().default(false),
+  remoteSettings: z.boolean().default(true),
 })
 
 /**

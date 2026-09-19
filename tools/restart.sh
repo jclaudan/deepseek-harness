@@ -1,20 +1,18 @@
 #!/bin/sh
 set -e
-# Restart rapide (sans rebuild).
-# Usage: ./tools/restart.sh [--remote]
+# Restart rapide (sans rebuild). LAN writable par défaut.
+# Usage: ./tools/restart.sh [--read-only]
 cd "$(dirname "$0")/.."
-REMOTE_FLAG=""
+READONLY=""
 for arg in "$@"; do
-  case "$arg" in --remote) REMOTE_FLAG="--remote" ;; esac
+  case "$arg" in --read-only) READONLY=1 ;; --remote) ;; esac # --remote compat no-op
 done
-# shellcheck disable=SC2086
 "$(dirname "$0")/down.sh"
-if [ "$REMOTE_FLAG" = "--remote" ]; then
-  exec "$(dirname "$0")/up.sh" --remote
+if [ "$READONLY" = "1" ]; then
+  exec "$(dirname "$0")/up.sh" --read-only
 else
-  # préserve DSH_REMOTE_SETTINGS du shell si déjà exporté
-  if [ "${DSH_REMOTE_SETTINGS:-}" = "1" ]; then
-    exec "$(dirname "$0")/up.sh" --remote
+  if [ "${DSH_REMOTE_SETTINGS:-1}" = "0" ]; then
+    exec "$(dirname "$0")/up.sh" --read-only
   else
     exec "$(dirname "$0")/up.sh"
   fi

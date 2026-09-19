@@ -1,39 +1,43 @@
 #!/bin/sh
 set -e
-# Lance dsh + searxng en détaché.
+# Lance dsh + searxng en détaché. LAN éditable par défaut.
 # Usage:
-#   ./tools/up.sh                # lecture seule sur LAN (défaut)
-#   ./tools/up.sh --remote       # ou DSH_REMOTE_SETTINGS=1 ./tools/up.sh -> settings persistants LAN
+#   ./tools/up.sh                # LAN writable (défaut)
+#   ./tools/up.sh --read-only    # LAN read-only (DSH_REMOTE_SETTINGS=0)
 #   ./tools/up.sh --build        # rebuild avant up
-#   ./tools/up.sh --remote --build
+#   ./tools/up.sh --read-only --build
+# Compat: --remote reste accepté (no-op, défaut déjà writable)
 cd "$(dirname "$0")/.."
 
-REMOTE=""
+REMOTE="1"
 BUILD=""
 
 for arg in "$@"; do
   case "$arg" in
-    --remote) REMOTE=1 ;;
+    --remote) REMOTE=1 ;; # compat : déjà le défaut
+    --read-only) REMOTE=0 ;;
     --build) BUILD=1 ;;
     --help|-h)
-      echo "Usage: $0 [--remote] [--build]"
-      echo "  --remote  active DSH_REMOTE_SETTINGS=1 (settings Host persistants sur IP LAN)"
-      echo "  --build   rebuild l'image avant de lancer"
+      echo "Usage: $0 [--read-only] [--build]"
+      echo "  --read-only  force DSH_REMOTE_SETTINGS=0 (LAN read-only)"
+      echo "  --remote     compat: LAN writable (défaut, no-op)"
+      echo "  --build      rebuild l'image avant de lancer"
       exit 0
       ;;
     *) echo "Option inconnue: $arg (voir --help)" >&2; exit 1 ;;
   esac
 done
 
-if [ "$REMOTE" = "1" ]; then
-  export DSH_REMOTE_SETTINGS=1
-  echo "→ DSH_REMOTE_SETTINGS=1 (LAN writable)"
+if [ "$REMOTE" = "0" ]; then
+  export DSH_REMOTE_SETTINGS=0
+  echo "→ DSH_REMOTE_SETTINGS=0 (LAN read-only)"
 else
-  # n'écrase pas si déjà exporté dans le shell
-  if [ "${DSH_REMOTE_SETTINGS:-}" = "1" ]; then
-    echo "→ DSH_REMOTE_SETTINGS=1 (hérité du shell)"
+  # Défaut writable : n'écrase pas un 0 explicite du shell
+  if [ "${DSH_REMOTE_SETTINGS:-1}" = "0" ]; then
+    echo "→ DSH_REMOTE_SETTINGS=0 (hérité du shell, LAN read-only)"
   else
-    echo "→ LAN read-only (passe --remote pour writable)"
+    export DSH_REMOTE_SETTINGS=1
+    echo "→ DSH_REMOTE_SETTINGS=1 (LAN writable, défaut)"
   fi
 fi
 

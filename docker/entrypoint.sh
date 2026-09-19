@@ -8,14 +8,14 @@ APP_PORT=3081
 # Launcher flags (--patch) must come before app flags (--port/--trusted-host)
 # or Commander treats them as unknown app options.
 DSH_PATCH_ARGS=""
-# DSH_REMOTE_SETTINGS: opt in to durable Host settings on non-loopback
-# pages (LAN browsers). Off by default for security; set to "1" to enable.
-if [ "${DSH_REMOTE_SETTINGS}" = "1" ]; then
+# DSH_REMOTE_SETTINGS: LAN browsers get durable Host settings by default
+# (editable). Set to "0" to opt-out and keep LAN read-only (memory).
+if [ "${DSH_REMOTE_SETTINGS}" = "0" ] || [ "${DSH_REMOTE_SETTINGS}" = "false" ]; then
   DSH_REMOTE_SETTINGS_PATCH=$(mktemp)
   cat > "${DSH_REMOTE_SETTINGS_PATCH}" <<'EOF'
 - id: ui-settings
   config:
-    remoteSettings: true
+    remoteSettings: false
 EOF
   DSH_PATCH_ARGS=" --patch ${DSH_REMOTE_SETTINGS_PATCH}"
 fi
